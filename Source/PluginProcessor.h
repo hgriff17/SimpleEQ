@@ -10,6 +10,17 @@
 
 #include <JuceHeader.h>
 
+// Data structure for all parameter values
+struct ChainSettings
+{
+    float peakFreq{ 0 }, peakGainInDecibels{ 0 }, peakQuality{ 1.f };
+    float lowCutFreq{ 0 }, highCutFreq{ 0 };
+    int lowCutSlope{ 0 }, highCutSlope{ 0 }; 
+};
+
+// Helper function to get the parameter values in the data struct
+ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& apvts);
+
 //==============================================================================
 /**
 */
@@ -32,6 +43,8 @@ public:
    #endif
 
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+    // Cannot glitch when in this process block 
+    // can't interupt this process block
 
     //==============================================================================
     juce::AudioProcessorEditor* createEditor() override;
@@ -56,12 +69,39 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    // Added Audio Processor value tree state
     static juce::AudioProcessorValueTreeState::ParameterLayout
         createParameterLayout();
     juce::AudioProcessorValueTreeState apvts{ *this, nullptr,
         "Parameters", createParameterLayout()};
 
 private:
+
+    // 'using x = juce::dsp::IIR::Filter<float>' creates an alias. Instead of writing the whole thing out again  
+    using Filter = juce::dsp::IIR::Filter<float>; // using allows you to specify a namespace
+    // An important concept in the DSP framework is to have a processor chain and pass in a processorContext 
+
+    //IIR has -12dB / Octave. So for -48dB we need 4 filters 
+
+    using CutFilter = juce::dsp::ProcessorChain<Filter, Filter, Filter, Filter>;
+
+    // Can configure filters to be different types of filters
+    // One filter can represent parametric filters 
+    // define a chain for the whole signal path
+    using MonoChain = juce::dsp::ProcessorChain<CutFilter, Filter, CutFilter>;
+
+    //Adjust cutoff, gain, slope
+    // Need 2 instances for stereo 
+
+    MonoChain leftChain, rightChain; 
+
+    enum ChainPositions
+    {
+        LowCut,
+        Peak,
+        HighCut
+    };
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleEQAudioProcessor)
 };
