@@ -111,6 +111,12 @@ private:
         HighCut
     };
 
+    void updatePeakFilter(const ChainSettings& chainSettings);
+
+    // create an alias
+    using Coefficients = Filter::CoefficientsPtr;
+    // doesn't use any variables so static
+    static void updateCoefficients(Coefficients& old, const Coefficients& replacements);
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleEQAudioProcessor)
 };
