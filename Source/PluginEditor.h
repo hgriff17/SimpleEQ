@@ -47,6 +47,18 @@ private:
         highCutSlopeSlider;
 
 
+    // aptvs has a helper class to attach sliders but it's got a long name 
+    using APTVS = juce::AudioProcessorValueTreeState;
+    using Attachment = APTVS::SliderAttachment;
+
+    // Declare attachment for all sliders
+    Attachment peakFreqSliderAttachment,
+        peakGainSliderAttachment,
+        peakQualitySliderAttachment,
+        lowCutFreqSliderAttachment,
+        highCutFreqSliderAttachment,
+        lowCutSlopeSliderAttachment,
+        highCutSlopeSliderAttachment;
 
     std::vector<juce::Component*> getComps();
 
