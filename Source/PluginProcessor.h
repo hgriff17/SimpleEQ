@@ -50,6 +50,14 @@ enum ChainPositions
     HighCut
 };
 
+// create an alias
+using Coefficients = Filter::CoefficientsPtr;
+// doesn't use any variables so static
+void updateCoefficients(Coefficients& old, const Coefficients& replacements);
+
+// returns coefficients and makes peak filter
+Coefficients makePeakFilter(const ChainSettings& chainSettings, double sampleRate);
+
 //==============================================================================
 /**
 */
@@ -111,13 +119,10 @@ private:
     MonoChain leftChain, rightChain; 
 
 
-
+    // need to create free functions  
     void updatePeakFilter(const ChainSettings& chainSettings);
 
-    // create an alias
-    using Coefficients = Filter::CoefficientsPtr;
-    // doesn't use any variables so static
-    static void updateCoefficients(Coefficients& old, const Coefficients& replacements);
+   
 
     template<int Index, typename ChainType, typename CoefficientType>
     void update(ChainType& chain, const CoefficientType& coefficients)
