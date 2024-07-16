@@ -58,6 +58,63 @@ void updateCoefficients(Coefficients& old, const Coefficients& replacements);
 // returns coefficients and makes peak filter
 Coefficients makePeakFilter(const ChainSettings& chainSettings, double sampleRate);
 
+template<int Index, typename ChainType, typename CoefficientType>
+void update(ChainType& chain, const CoefficientType& coefficients)
+{
+    updateCoefficients(chain.template get<Index>().coefficients, coefficients[Index]);
+    chain.template setBypassed<Index>(false);
+}
+
+template<typename ChainType, typename CoefficientType>
+void updateCutFilter(ChainType& chain,
+    const CoefficientType& coefficients,
+    const Slope& slope)
+{
+    //auto cutCoefficients = juce::dsp::FilterDesign<float>::designIIRHighpassHighOrderButterworthMethod(chainSettings.lowCutFreq, sampleRate, 2 * (chainSettings.lowCutSlope + 1));
+
+    //auto& leftLowCut = leftChain.get<ChainPositions::LowCut>();
+
+    // 4 positions so bypass all 4
+    chain.template setBypassed<0>(true);
+    chain.template setBypassed<1>(true);
+    chain.template setBypassed<2>(true);
+    chain.template setBypassed<3>(true);
+
+    // want to switch based on slope setting
+    switch (slope)
+    {
+            // use case pass through 
+        case Slope_48:
+        {
+            update<3>(chain, coefficients);
+        }
+        case Slope_36:
+        {
+            update<2>(chain, coefficients);
+        }
+        case Slope_24:
+        {
+            update<1>(chain, coefficients);
+        }
+        case Slope_12:
+        {
+            update<0>(chain, coefficients);
+        }
+    }
+}
+
+// need helper functions for producing coefficients 
+// produce inliner because it won't know what do use for the definition 
+inline auto makeLowCutFilter(const ChainSettings& chainSettings, double sampleRate)
+{
+    return juce::dsp::FilterDesign<float>::designIIRHighpassHighOrderButterworthMethod(chainSettings.lowCutFreq, sampleRate, 2 * (chainSettings.lowCutSlope + 1));
+}
+
+inline auto makeHighCutFilter(const ChainSettings& chainSettings, double sampleRate)
+{
+    return juce::dsp::FilterDesign<float>::designIIRLowpassHighOrderButterworthMethod(chainSettings.highCutFreq, sampleRate, 2 * (chainSettings.highCutSlope + 1));
+}
+
 //==============================================================================
 /**
 */
@@ -121,53 +178,6 @@ private:
 
     // need to create free functions  
     void updatePeakFilter(const ChainSettings& chainSettings);
-
-   
-
-    template<int Index, typename ChainType, typename CoefficientType>
-    void update(ChainType& chain, const CoefficientType& coefficients)
-    {
-        updateCoefficients(chain.template get<Index>().coefficients, coefficients[Index]);
-        chain.template setBypassed<Index>(false);
-    }
-
-    template<typename ChainType, typename CoefficientType>
-    void updateCutFilter(ChainType& chain,
-        const CoefficientType& coefficients,
-        const Slope& slope)
-    {
-        //auto cutCoefficients = juce::dsp::FilterDesign<float>::designIIRHighpassHighOrderButterworthMethod(chainSettings.lowCutFreq, sampleRate, 2 * (chainSettings.lowCutSlope + 1));
-
-        //auto& leftLowCut = leftChain.get<ChainPositions::LowCut>();
-
-        // 4 positions so bypass all 4
-        chain.template setBypassed<0>(true);
-        chain.template setBypassed<1>(true);
-        chain.template setBypassed<2>(true);
-        chain.template setBypassed<3>(true);
-
-        // want to switch based on slope setting
-        switch (slope)
-        {
-            // use case pass through 
-        case Slope_48:
-        {
-            update<3>(chain, coefficients);
-        }
-        case Slope_36:
-        {
-            update<2>(chain, coefficients);
-        }
-        case Slope_24:
-        {
-            update<1>(chain, coefficients);
-        }
-        case Slope_12:
-        {
-            update<0>(chain, coefficients);
-        }
-        }
-    }
 
     void updateLowCutFilters(const ChainSettings& chainSettings);
     void updateHighCutFilters(const ChainSettings& chainSettings);
