@@ -95,13 +95,13 @@ void SimpleEQAudioProcessorEditor::paint (juce::Graphics& g)
 
         // high cut 
         if (!highcut.isBypassed<0>())
-            mag *= lowcut.get<0>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+            mag *= highcut.get<0>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
         if (!highcut.isBypassed<1>())
-            mag *= lowcut.get<1>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+            mag *= highcut.get<1>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
         if (!highcut.isBypassed<2>())
-            mag *= lowcut.get<2>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+            mag *= highcut.get<2>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
         if (!highcut.isBypassed<3>())
-            mag *= lowcut.get<3>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+            mag *= highcut.get<3>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
 
         mags[i] = Decibels::gainToDecibels(mag);
 
@@ -172,6 +172,13 @@ void SimpleEQAudioProcessorEditor::timerCallback()
         auto chainSettings = getChainSettings(audioProcessor.apvts);
         auto peakCoefficients = makePeakFilter(chainSettings, audioProcessor.getSampleRate());
         updateCoefficients(MonoChain.get<ChainPositions::Peak>().coefficients, peakCoefficients);
+
+        auto lowCutCoefficients = makeLowCutFilter(chainSettings, audioProcessor.getSampleRate());
+        auto highCutCoefficients = makeHighCutFilter(chainSettings, audioProcessor.getSampleRate());
+
+        // The high cut isn't working 
+        updateCutFilter(MonoChain.get<ChainPositions::LowCut>(), lowCutCoefficients, chainSettings.lowCutSlope); // low cut
+        updateCutFilter(MonoChain.get<ChainPositions::HighCut>(), highCutCoefficients, chainSettings.highCutSlope); // high cut
          
         //signal a repaint
         repaint();

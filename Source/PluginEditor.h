@@ -38,7 +38,7 @@ public:
     void resized() override;
 
     // From the Listener class
-     void parameterValueChanged(int parameterIndex, float newValue) override;
+    void parameterValueChanged(int parameterIndex, float newValue) override;
 
     virtual void parameterGestureChanged(int parameterIndex, bool gestureIsStarting) override {}
 
